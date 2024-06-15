@@ -25,7 +25,7 @@
     save_data(sum);
 }
 
-int get_current_num_value() method_id {
+int get_num() method_id {
     (int num) = load_data();
     return (num);
 }
