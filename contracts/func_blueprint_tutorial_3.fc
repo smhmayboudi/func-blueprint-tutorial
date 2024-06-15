@@ -1,0 +1,66 @@
+#include "imports/stdlib.fc";
+#include "imports/error_codes.fc";
+#include "imports/op_codes.fc";
+
+(int, int, slice) load_data () inline {
+    slice ds = get_data().begin_parse();
+    int seqno = ds~load_uint(32);
+    int public_key = ds~load_uint(256);
+    slice owner_address = ds~load_msg_addr();
+    return (seqno, public_key, owner_address);
+}
+
+() save_data (int seqno, int public_key, slice owner_address) impure inline {
+    set_data(begin_cell()
+        .store_uint(seqno, 32)
+        .store_uint(public_key, 256)
+        .store_slice(owner_address)
+    .end_cell());
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) {
+        return ();
+    }
+    slice sender_address = cs~load_msg_addr();
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+    (int seqno, int public_key, slice owner_address) = load_data();
+    int op = in_msg_body~load_uint(32);
+    if (op == op::deposit) {
+        return ();
+    }
+    if(op == op::transfer_msg_to_owner) {
+        return ();
+    }
+
+    throw_unless(error::unknown_owner_address, equal_slices(sender_address, owner_address));
+    if(op == op::change_owner) {
+        return ();
+    }
+    if(op == op::withdraw_funds) {
+        return ();
+    }
+    if(op == op::update_code) {
+        return ();
+    }
+    throw(error::unknown_op);
+}
+
+(int) get_seqno() method_id {
+    (int seqno, _, _) = load_data();
+    return seqno;
+}
+
+(int) get_public_key() method_id {
+    (_, int public_key, _) = load_data();
+    return (public_key);
+}
+
+(slice) get_owner() method_id {
+    (_, _, slice owner_address) = load_data();
+    return (owner_address);
+}
