@@ -10,7 +10,7 @@ export type FuncBlueprintTutorial3Config = {
 export function funcBlueprintTutorial3ConfigToCell(config: FuncBlueprintTutorial3Config): Cell {
     return beginCell()
         .storeUint(config.seqno, 32)
-        .storeBuffer(config.publicKey, 256)
+        .storeBuffer(config.publicKey)
         .storeAddress(config.ownerAddress)
         .endCell();
 }
@@ -36,7 +36,7 @@ export class FuncBlueprintTutorial3 implements Contract {
         await provider.internal(via, {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().endCell(),
+            body: Cell.EMPTY,
         });
     }
 
@@ -55,10 +55,10 @@ export class FuncBlueprintTutorial3 implements Contract {
         return stack.readNumber();
     }
 
-    async getPublicKey(provider: ContractProvider): Promise<Buffer> {
-        const { stack } = await provider.get('get_public_key', []);
-        return stack.readBuffer();
-    }
+    // async getPublicKey(provider: ContractProvider): Promise<Buffer> {
+    //     const { stack } = await provider.get('get_public_key', []);
+    //     return stack.readBuffer();
+    // }
 
     async getOwnerAddress(provider: ContractProvider): Promise<Address> {
         const { stack } = await provider.get('get_owner_address', []);

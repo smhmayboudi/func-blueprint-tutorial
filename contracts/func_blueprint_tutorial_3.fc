@@ -60,7 +60,7 @@
     return (public_key);
 }
 
-(slice) get_owner() method_id {
+(slice) get_owner_address() method_id {
     (_, _, slice owner_address) = load_data();
     return (owner_address);
 }
