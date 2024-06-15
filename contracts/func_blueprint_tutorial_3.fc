@@ -3,6 +3,8 @@
 #include "imports/op_codes.fc";
 #include "imports/stdlib.fc";
 
+const int min_tons_for_storage = 1000000000;
+
 (int, int, slice) load_data() inline {
     slice ds = get_data().begin_parse();
     int seqno = ds~load_uint(32);
@@ -59,6 +61,16 @@
         return ();
     }
     if(op == op::withdraw_funds) {
+        int withdraw_amount = in_msg_body~load_coins();
+        throw_unless(412, get_smc_balance() >= withdraw_amount);
+        int send_amount = min(withdraw_amount, my_balance - min_tons_for_storage);
+        cell msg = begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice(owner_address)
+                .store_coins(withdraw_amount)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .end_cell();
+        send_raw_message(msg, 1);
         return ();
     }
     if(op == op::update_code) {
@@ -84,6 +96,5 @@
 
 int get_smc_balance() method_id {
     [int balance, _] = get_balance();
-
     return balance;
 }

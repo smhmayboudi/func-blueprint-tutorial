@@ -1,3 +1,4 @@
+const int error::unknown_balance = 412;
 const int error::unknown_op = 0xffff;
 const int error::unknown_owner_address = 411;
 const int error::unknown_workchain = 333;

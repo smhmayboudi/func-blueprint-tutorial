@@ -27,7 +27,7 @@ describe('FuncBlueprintTutorial3', () => {
         funcBlueprintTutorial3 = blockchain.openContract(
             FuncBlueprintTutorial3.createFromConfig({ seqno, publicKey, ownerAddress: owner.address }, code),
         );
-        const deployResult = await funcBlueprintTutorial3.sendDeploy(deployer.getSender(), toNano('0.05'));
+        const deployResult = await funcBlueprintTutorial3.sendDeploy(deployer.getSender(), toNano(0.05));
         expect(deployResult.transactions).toHaveTransaction({
             from: deployer.address,
             to: funcBlueprintTutorial3.address,
@@ -82,6 +82,51 @@ describe('FuncBlueprintTutorial3', () => {
         const changeOwnerResult = await funcBlueprintTutorial3.sendChangeOwnerAddress(sender.getSender(), {
             value: toNano(0.5),
             newOwnerAddress: sender.address,
+        });
+        expect(changeOwnerResult.transactions).toHaveTransaction({
+            from: sender.address,
+            to: funcBlueprintTutorial3.address,
+            exitCode: errorCodes.unknown_owner_address,
+            success: false,
+        });
+    });
+
+    it('withdraw_funds', async () => {
+        const sender = await blockchain.treasury('sender');
+        const result = await funcBlueprintTutorial3.sendDeposit(sender.getSender(), { value: toNano(2) });
+        expect(result.transactions).toHaveTransaction({
+            from: sender.address,
+            to: funcBlueprintTutorial3.address,
+            success: true,
+        });
+        const changeOwnerResult = await funcBlueprintTutorial3.sendWithdrawFunds(owner.getSender(), {
+            value: toNano(0.5),
+            amount: toNano(0.5),
+        });
+        expect(changeOwnerResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: funcBlueprintTutorial3.address,
+            success: true,
+        });
+    });
+
+    it('withdraw_funds MORE', async () => {
+        const changeOwnerResult = await funcBlueprintTutorial3.sendWithdrawFunds(owner.getSender(), {
+            value: toNano(0.5),
+            amount: toNano(100),
+        });
+        expect(changeOwnerResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: funcBlueprintTutorial3.address,
+            success: false,
+        });
+    });
+
+    it('withdraw_funds NOT', async () => {
+        const sender = await blockchain.treasury('sender');
+        const changeOwnerResult = await funcBlueprintTutorial3.sendWithdrawFunds(sender.getSender(), {
+            value: toNano(0.5),
+            amount: toNano(1),
         });
         expect(changeOwnerResult.transactions).toHaveTransaction({
             from: sender.address,

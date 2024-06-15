@@ -77,6 +77,21 @@ export class FuncBlueprintTutorial3 implements Contract {
         });
     }
 
+    async sendWithdrawFunds(
+        provider: ContractProvider,
+        via: Sender,
+        opts: {
+            value: bigint;
+            amount: bigint;
+        },
+    ): Promise<void> {
+        await provider.internal(via, {
+            value: opts.value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: beginCell().storeUint(opCodes.withdrawFunds, 32).storeCoins(opts.amount).endCell(),
+        });
+    }
+
     async getSeqno(provider: ContractProvider): Promise<number> {
         const { stack } = await provider.get('get_seqno', []);
         return stack.readNumber();

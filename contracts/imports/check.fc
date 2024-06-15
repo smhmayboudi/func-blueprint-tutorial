@@ -1,5 +1,5 @@
 #include "stdlib.fc";
-;; #include "error_codes.fc";
+#include "error_codes.fc";
 
 const int workchain = 0;
 
