@@ -1,2 +1,2 @@
 const int error::unknown_op = 0xffff;
-const int error::unknown_owner_address = 411;
+const int error::unknown_owner_address = "error::unknown_owner_address"c;

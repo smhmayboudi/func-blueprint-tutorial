@@ -4,6 +4,7 @@ import { FuncBlueprintTutorial3 } from '../wrappers/FuncBlueprintTutorial3';
 import '@ton/test-utils';
 import { compile } from '@ton/blueprint';
 import { mnemonicToPrivateKey } from '@ton/crypto';
+import { errorCodes } from '../wrappers/ErrorCodes';
 
 describe('FuncBlueprintTutorial3', () => {
     let code: Cell;
@@ -14,16 +15,17 @@ describe('FuncBlueprintTutorial3', () => {
 
     let publicKey: Buffer;
     let blockchain: Blockchain;
-    let deployer: SandboxContract<TreasuryContract>;
+    let owner: SandboxContract<TreasuryContract>;
     let funcBlueprintTutorial3: SandboxContract<FuncBlueprintTutorial3>;
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
-        deployer = await blockchain.treasury('deployer');
+        owner = await blockchain.treasury('owner');
+        const deployer = await blockchain.treasury('deployer');
         const seqno = 0;
         publicKey = (await mnemonicToPrivateKey([''])).publicKey;
         funcBlueprintTutorial3 = blockchain.openContract(
-            FuncBlueprintTutorial3.createFromConfig({ seqno, publicKey, ownerAddress: deployer.address }, code),
+            FuncBlueprintTutorial3.createFromConfig({ seqno, publicKey, ownerAddress: owner.address }, code),
         );
         const deployResult = await funcBlueprintTutorial3.sendDeploy(deployer.getSender(), toNano('0.05'));
         expect(deployResult.transactions).toHaveTransaction({
@@ -41,13 +43,25 @@ describe('FuncBlueprintTutorial3', () => {
 
     it('deposite', async () => {
         const senderWallet = await blockchain.treasury('sender');
-        const result = await funcBlueprintTutorial3.sendDeposit(senderWallet.getSender(), toNano(0.05));
+        const result = await funcBlueprintTutorial3.sendDeposit(senderWallet.getSender(), { value: toNano(0.05) });
         expect(result.transactions).toHaveTransaction({
             from: senderWallet.address,
             to: funcBlueprintTutorial3.address,
             success: true,
         });
     });
+
+    it('message_to_owner', async () => {
+        const result = await funcBlueprintTutorial3.sendMessageToOwner(owner.getSender(), {
+            value: toNano(0.5),
+        });
+        expect(result.transactions).toHaveTransaction({
+            from: owner.address,
+            to: funcBlueprintTutorial3.address,
+            success: true,
+        });
+    });
+
 
     it('get_seqno', async () => {
         const sqeno = await funcBlueprintTutorial3.getSeqno();
@@ -61,6 +75,18 @@ describe('FuncBlueprintTutorial3', () => {
 
     it('get_owner', async () => {
         const ownerAddress = await funcBlueprintTutorial3.getOwnerAddress();
-        expect(ownerAddress.toString()).toEqual(deployer.address.toString());
+        expect(ownerAddress.toString()).toEqual(owner.address.toString());
+    });
+
+    it('get_smc_balance', async () => {
+        const senderWallet = await blockchain.treasury('sender');
+        const result = await funcBlueprintTutorial3.sendDeposit(senderWallet.getSender(), { value: toNano(1) });
+        expect(result.transactions).toHaveTransaction({
+            from: senderWallet.address,
+            to: funcBlueprintTutorial3.address,
+            success: true,
+        });
+        const smcBalance = await funcBlueprintTutorial3.getSMCBalance();
+        expect(smcBalance).toBeGreaterThan(toNano(0.99));
     });
 });

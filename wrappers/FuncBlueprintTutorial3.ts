@@ -40,13 +40,25 @@ export class FuncBlueprintTutorial3 implements Contract {
         });
     }
 
-    async sendDeposit(provider: ContractProvider, via: Sender, value: bigint) {
+    async sendDeposit(provider: ContractProvider, via: Sender, opts: { value: bigint }) {
         await provider.internal(via, {
-            value,
+            value: opts.value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell()
-                .storeUint(opCodes.deposit, 32)
-            .endCell(),
+            body: beginCell().storeUint(opCodes.deposit, 32).endCell(),
+        });
+    }
+
+    async sendMessageToOwner(
+        provider: ContractProvider,
+        via: Sender,
+        opts: {
+            value: bigint;
+        },
+    ) {
+        await provider.internal(via, {
+            value: opts.value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: beginCell().storeUint(opCodes.transferMSGToOwner, 32).endCell(),
         });
     }
 
@@ -63,5 +75,10 @@ export class FuncBlueprintTutorial3 implements Contract {
     async getOwnerAddress(provider: ContractProvider): Promise<Address> {
         const { stack } = await provider.get('get_owner_address', []);
         return stack.readAddress();
+    }
+
+    async getSMCBalance(provider: ContractProvider): Promise<bigint> {
+        const { stack } = await provider.get('get_smc_balance', []);
+        return stack.readBigNumber();
     }
 }
