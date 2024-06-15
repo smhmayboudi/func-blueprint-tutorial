@@ -1,5 +1,5 @@
-const int op::deposit = 1; ;;"deposit"c;
-const int op::transfer_msg_to_owner = 2; ;; "transfer_msg_to_owner"c;
-const int op::change_owner = 3; ;;"change_owner"c;
-const int op::withdraw_funds = 4; ;;"withdraw_funds"c;
-const int op::update_code = 5; ;;"update_code"c;
+const int op::deposit = "op::deposit"c;
+const int op::transfer_msg_to_owner = "op::transfer_msg_to_owner"c;
+const int op::change_owner = "op::change_owner"c;
+const int op::withdraw_funds = "op::withdraw_funds"c;
+const int op::update_code = "op::update_code"c;

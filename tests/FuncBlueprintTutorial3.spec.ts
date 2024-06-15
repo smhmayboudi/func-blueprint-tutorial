@@ -17,22 +17,18 @@ describe('FuncBlueprintTutorial3', () => {
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
-
         deployer = await blockchain.treasury('deployer');
-
         funcBlueprintTutorial3 = blockchain.openContract(
             FuncBlueprintTutorial3.createFromConfig(
                 {
                     seqno: 0,
-                    publicKey: Buffer.alloc(256, 0),
+                    publicKey: Buffer.alloc(256),
                     ownerAddress: deployer.address,
                 },
                 code,
             ),
         );
-
         const deployResult = await funcBlueprintTutorial3.sendDeploy(deployer.getSender(), toNano('0.05'));
-
         expect(deployResult.transactions).toHaveTransaction({
             from: deployer.address,
             to: funcBlueprintTutorial3.address,
@@ -46,6 +42,16 @@ describe('FuncBlueprintTutorial3', () => {
         // blockchain and funcBlueprintTutorial3 are ready to use
     });
 
+    it('deposite', async () => {
+        const senderWallet = await blockchain.treasury('sender');
+        const result = await funcBlueprintTutorial3.sendDeposit(senderWallet.getSender(), toNano(0.05));
+        expect(result.transactions).toHaveTransaction({
+            from: senderWallet.address,
+            to: funcBlueprintTutorial3.address,
+            success: true,
+        });
+    });
+
     it('get_seqno', async () => {
         const sqeno = await funcBlueprintTutorial3.getSeqno();
         expect(sqeno).toEqual(1);
@@ -53,7 +59,7 @@ describe('FuncBlueprintTutorial3', () => {
 
     it('get_public_key', async () => {
         const publicKey = await funcBlueprintTutorial3.getPublicKey();
-        expect(publicKey).toEqual(Buffer.alloc(256, 0));
+        expect(publicKey).toEqual(Buffer.alloc(256));
     });
 
     it('get_owner', async () => {

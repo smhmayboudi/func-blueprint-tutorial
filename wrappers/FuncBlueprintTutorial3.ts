@@ -1,4 +1,5 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
+import { opCodes } from './OPCodes';
 
 export type FuncBlueprintTutorial3Config = {
     seqno: number;
@@ -36,6 +37,16 @@ export class FuncBlueprintTutorial3 implements Contract {
             value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell().endCell(),
+        });
+    }
+
+    async sendDeposit(provider: ContractProvider, via: Sender, value: bigint) {
+        await provider.internal(via, {
+            value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: beginCell()
+                .storeUint(opCodes.deposit, 32)
+            .endCell(),
         });
     }
 
