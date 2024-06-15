@@ -74,6 +74,11 @@ const int min_tons_for_storage = 1000000000;
         return ();
     }
     if(op == op::update_code) {
+        cell new_code = in_msg_body~load_ref();
+        set_code(new_code);
+        cont old_code = get_c3();
+        set_c3(new_code.begin_parse().bless());
+        throw(0);
         return ();
     }
     throw(error::unknown_op);
