@@ -1,6 +1,7 @@
-#include "imports/stdlib.fc";
+#include "imports/check.fc";
 #include "imports/error_codes.fc";
 #include "imports/op_codes.fc";
+#include "imports/stdlib.fc";
 
 (int, int, slice) load_data() inline {
     slice ds = get_data().begin_parse();
@@ -51,7 +52,10 @@
     }
 
     throw_unless(error::unknown_owner_address, equal_slices(sender_address, owner_address));
-    if(op == op::change_owner) {
+    if(op == op::change_owner_address) {
+        slice new_owner_address = in_msg_body~load_msg_addr();
+        force_chain(new_owner_address);
+        save_data(seqno, public_key, new_owner_address);
         return ();
     }
     if(op == op::withdraw_funds) {

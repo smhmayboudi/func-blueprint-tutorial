@@ -54,11 +54,26 @@ export class FuncBlueprintTutorial3 implements Contract {
         opts: {
             value: bigint;
         },
-    ) {
+    ): Promise<void> {
         await provider.internal(via, {
             value: opts.value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell().storeUint(opCodes.transferMSGToOwner, 32).endCell(),
+        });
+    }
+
+    async sendChangeOwnerAddress(
+        provider: ContractProvider,
+        via: Sender,
+        opts: {
+            value: bigint;
+            newOwnerAddress: Address;
+        },
+    ): Promise<void> {
+        await provider.internal(via, {
+            value: opts.value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: beginCell().storeUint(opCodes.changeOwnerAddress, 32).storeAddress(opts.newOwnerAddress).endCell(),
         });
     }
 

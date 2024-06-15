@@ -1,0 +1,9 @@
+#include "stdlib.fc";
+;; #include "error_codes.fc";
+
+const int workchain = 0;
+
+() force_chain(slice addr) impure {
+  (int wc, _) = parse_std_addr(addr);
+  throw_unless(error::unknown_workchain, wc == workchain);
+}

@@ -42,10 +42,10 @@ describe('FuncBlueprintTutorial3', () => {
     });
 
     it('deposite', async () => {
-        const senderWallet = await blockchain.treasury('sender');
-        const result = await funcBlueprintTutorial3.sendDeposit(senderWallet.getSender(), { value: toNano(0.05) });
+        const sender = await blockchain.treasury('sender');
+        const result = await funcBlueprintTutorial3.sendDeposit(sender.getSender(), { value: toNano(0.05) });
         expect(result.transactions).toHaveTransaction({
-            from: senderWallet.address,
+            from: sender.address,
             to: funcBlueprintTutorial3.address,
             success: true,
         });
@@ -62,6 +62,34 @@ describe('FuncBlueprintTutorial3', () => {
         });
     });
 
+    it('change_owner_address', async () => {
+        const sender = await blockchain.treasury('sender');
+        const changeOwnerResult = await funcBlueprintTutorial3.sendChangeOwnerAddress(owner.getSender(), {
+            value: toNano(0.5),
+            newOwnerAddress: sender.address,
+        });
+        expect(changeOwnerResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: funcBlueprintTutorial3.address,
+            success: true,
+        });
+        const currentOwnerAddress = await funcBlueprintTutorial3.getOwnerAddress();
+        expect(currentOwnerAddress).toEqualAddress(sender.address);
+    });
+
+    it('change_owner_address NOT', async () => {
+        const sender = await blockchain.treasury('sender');
+        const changeOwnerResult = await funcBlueprintTutorial3.sendChangeOwnerAddress(sender.getSender(), {
+            value: toNano(0.5),
+            newOwnerAddress: sender.address,
+        });
+        expect(changeOwnerResult.transactions).toHaveTransaction({
+            from: sender.address,
+            to: funcBlueprintTutorial3.address,
+            exitCode: errorCodes.unknown_owner_address,
+            success: false,
+        });
+    });
 
     it('get_seqno', async () => {
         const sqeno = await funcBlueprintTutorial3.getSeqno();
@@ -79,10 +107,10 @@ describe('FuncBlueprintTutorial3', () => {
     });
 
     it('get_smc_balance', async () => {
-        const senderWallet = await blockchain.treasury('sender');
-        const result = await funcBlueprintTutorial3.sendDeposit(senderWallet.getSender(), { value: toNano(1) });
+        const sender = await blockchain.treasury('sender');
+        const result = await funcBlueprintTutorial3.sendDeposit(sender.getSender(), { value: toNano(1) });
         expect(result.transactions).toHaveTransaction({
-            from: senderWallet.address,
+            from: sender.address,
             to: funcBlueprintTutorial3.address,
             success: true,
         });
