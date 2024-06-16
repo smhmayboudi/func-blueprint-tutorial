@@ -84,6 +84,29 @@ const int min_tons_for_storage = 1000000000;
     throw(error::unknown_op);
 }
 
+() recv_external(slice in_msg) impure {
+    var signature = in_msg~load_bits(512);
+    slice tmp_in_msg = in_msg;
+    var hash = slice_hash(in_msg);
+    (int seqno, int public_key, slice owner_address) = load_data();
+    throw_unless(error::unknown_signature, check_signature(hash, signature, public_key));
+    int msg_seqno = tmp_in_msg~load_uint(32);
+    throw_unless(error::unknown_seqno, msg_seqno == seqno);
+    accept_message();
+    tmp_in_msg~touch();
+    int op = tmp_in_msg~load_uint(32);
+    if(op == "selfdestruct"c) {
+        cell msg = begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice(owner_address)
+                .store_coins(0)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .end_cell();
+        send_raw_message(msg, 128 + 32);
+    }
+    save_data(seqno + 1, public_key, owner_address);
+}
+
 (int) get_seqno() method_id {
     (int seqno, _, _) = load_data();
     return seqno;

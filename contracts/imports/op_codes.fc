@@ -3,3 +3,4 @@ const int op::message_to_owner = "op::message_to_owner"c;
 const int op::change_owner_address = "op::change_owner_address"c;
 const int op::withdraw_funds = "op::withdraw_funds"c;
 const int op::update_code = "op::update_code"c;
+const int op::self_destruct = "op::self_destruct"c;

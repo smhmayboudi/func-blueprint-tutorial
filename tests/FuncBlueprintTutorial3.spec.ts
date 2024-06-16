@@ -3,29 +3,33 @@ import { Cell, toNano } from '@ton/core';
 import { FuncBlueprintTutorial3 } from '../wrappers/FuncBlueprintTutorial3';
 import '@ton/test-utils';
 import { compile } from '@ton/blueprint';
-import { mnemonicToPrivateKey } from '@ton/crypto';
+import { KeyPair, mnemonicNew, mnemonicToPrivateKey, sign } from '@ton/crypto';
 import { errorCodes } from '../wrappers/ErrorCodes';
+import { opCodes } from '../wrappers/OPCodes';
 
 describe('FuncBlueprintTutorial3', () => {
     let code: Cell;
+    let blockchain: Blockchain;
+    let owner: SandboxContract<TreasuryContract>;
+    let keyPair: KeyPair;
+    let funcBlueprintTutorial3: SandboxContract<FuncBlueprintTutorial3>;
 
     beforeAll(async () => {
         code = await compile('FuncBlueprintTutorial3');
     });
 
-    let publicKey: Buffer;
-    let blockchain: Blockchain;
-    let owner: SandboxContract<TreasuryContract>;
-    let funcBlueprintTutorial3: SandboxContract<FuncBlueprintTutorial3>;
-
     beforeEach(async () => {
         blockchain = await Blockchain.create();
+        let mnemonics = await mnemonicNew();
         owner = await blockchain.treasury('owner');
         const deployer = await blockchain.treasury('deployer');
         const seqno = 0;
-        publicKey = (await mnemonicToPrivateKey([''])).publicKey;
+        keyPair = await mnemonicToPrivateKey(mnemonics);
         funcBlueprintTutorial3 = blockchain.openContract(
-            FuncBlueprintTutorial3.createFromConfig({ seqno, publicKey, ownerAddress: owner.address }, code),
+            FuncBlueprintTutorial3.createFromConfig(
+                { seqno, publicKey: keyPair.publicKey, ownerAddress: owner.address },
+                code,
+            ),
         );
         const deployResult = await funcBlueprintTutorial3.sendDeploy(deployer.getSender(), toNano(0.05));
         expect(deployResult.transactions).toHaveTransaction({
@@ -136,14 +140,64 @@ describe('FuncBlueprintTutorial3', () => {
         });
     });
 
+    it('external signature ERROR', async () => {
+        let mnemonics = await mnemonicNew();
+        const badKp = await mnemonicToPrivateKey(mnemonics);
+        expect.assertions(2);
+        await expect(
+            funcBlueprintTutorial3.sendExternalMessage({
+                opCode: opCodes.selfDestruct,
+                signFunc: (buf) => sign(buf, badKp.secretKey),
+                seqno: 0,
+            }),
+        ).rejects.toThrow();
+    });
+
+    it('external seqno ERROR', async () => {
+        expect.assertions(2);
+        await expect(
+            funcBlueprintTutorial3.sendExternalMessage({
+                opCode: opCodes.selfDestruct,
+                signFunc: (buf) => sign(buf, keyPair.secretKey),
+                seqno: 1,
+            }),
+        ).rejects.toThrow();
+    });
+
+    it('external should sign with op', async () => {
+        const selfDestructResult = await funcBlueprintTutorial3.sendExternalMessage({
+            opCode: opCodes.selfDestruct,
+            signFunc: (buf) => sign(buf, keyPair.secretKey),
+            seqno: 0,
+        });
+        expect(selfDestructResult.transactions).toHaveTransaction({
+            from: funcBlueprintTutorial3.address,
+            to: owner.address,
+            success: true,
+        });
+    });
+
+    it('external should sign with no op', async () => {
+        const selfDestructResult = await funcBlueprintTutorial3.sendExternalMessage({
+            opCode: 0,
+            signFunc: (buf) => sign(buf, keyPair.secretKey),
+            seqno: 0,
+        });
+        expect(selfDestructResult.transactions).toHaveTransaction({
+            from: funcBlueprintTutorial3.address,
+            to: owner.address,
+            success: true,
+        });
+    });
+
     it('get_seqno', async () => {
         const sqeno = await funcBlueprintTutorial3.getSeqno();
         expect(sqeno).toEqual(0);
     });
 
     // it('get_public_key', async () => {
-    //     const publicKeyT = await funcBlueprintTutorial3.getPublicKey();
-    //     expect(publicKeyT.equals(publicKey)).toBe(true);
+    //     const publicKey = await funcBlueprintTutorial3.getPublicKey();
+    //     expect(publicKey.equals(keyPair.PublicKey)).toBe(true);
     // });
 
     it('get_owner', async () => {

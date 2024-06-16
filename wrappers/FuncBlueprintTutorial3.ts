@@ -92,6 +92,19 @@ export class FuncBlueprintTutorial3 implements Contract {
         });
     }
 
+    async sendExternalMessage(
+        provider: ContractProvider,
+        opts: {
+            opCode: number;
+            seqno: number;
+            signFunc: (buf: Buffer) => Buffer;
+        },
+    ): Promise<void> {
+        const msgToSign = beginCell().storeUint(opts.seqno, 32).storeUint(opts.opCode, 32).endCell();
+        const sig = opts.signFunc(msgToSign.hash());
+        await provider.external(beginCell().storeBuffer(sig).storeSlice(msgToSign.asSlice()).endCell());
+    }
+
     async getSeqno(provider: ContractProvider): Promise<number> {
         const { stack } = await provider.get('get_seqno', []);
         return stack.readNumber();
