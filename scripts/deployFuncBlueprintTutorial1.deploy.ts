@@ -11,7 +11,7 @@ export async function run(provider: NetworkProvider) {
             await compile('FuncBlueprintTutorial1'),
         ),
     );
-    await funcBlueprintTutorial1.sendDeploy(provider.sender(), toNano('0.05'));
+    await funcBlueprintTutorial1.sendDeploy(provider.sender(), { value: toNano(0.05) });
     await provider.waitForDeploy(funcBlueprintTutorial1.address);
     // run methods on `funcBlueprintTutorial1`
     const num = await funcBlueprintTutorial1.getNum();

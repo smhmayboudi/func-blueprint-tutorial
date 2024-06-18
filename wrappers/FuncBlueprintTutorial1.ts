@@ -25,9 +25,9 @@ export class FuncBlueprintTutorial1 implements Contract {
         return new FuncBlueprintTutorial1(address, init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint): Promise<void> {
+    async sendDeploy(provider: ContractProvider, via: Sender, opts: { value: bigint }): Promise<void> {
         await provider.internal(via, {
-            value,
+            value: opts.value,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: Cell.EMPTY,
         });
