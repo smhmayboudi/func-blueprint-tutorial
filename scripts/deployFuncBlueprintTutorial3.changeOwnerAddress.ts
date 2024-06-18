@@ -8,16 +8,7 @@ export async function run(provider: NetworkProvider, args: string[]) {
     const funcBlueprintTutorial3 = provider.open(FuncBlueprintTutorial3.createFromAddress(address));
     // run methods on `funcBlueprintTutorial3`
 
-    const balanceBefore = await funcBlueprintTutorial3.getSMCBalance();
-    await funcBlueprintTutorial3.sendDeposit(provider.sender(), { value: toNano(1) });
-    let balanceAfter = await funcBlueprintTutorial3.getSMCBalance();
-    let attempt = 1;
-    while (balanceAfter === balanceBefore) {
-        ui.setActionPrompt(`Attempt ${attempt}`);
-        await sleep(2000);
-        balanceAfter = await funcBlueprintTutorial3.getSMCBalance();
-        attempt++;
-    }
-    ui.clearActionPrompt();
-    ui.write('Deposit successfully!');
+    const newOwnerAddress = Address.parse(args.length > 0 ? args[0] : await ui.input('New Owner Address'));
+    await funcBlueprintTutorial3.sendChangeOwnerAddress(provider.sender(), { value: toNano(0.05), newOwnerAddress });
+    ui.write('ChangeOwnerAddress successfully!');
 }

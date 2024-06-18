@@ -9,7 +9,10 @@ export async function run(provider: NetworkProvider, args: string[]) {
     // run methods on `funcBlueprintTutorial3`
 
     const balanceBefore = await funcBlueprintTutorial3.getSMCBalance();
-    await funcBlueprintTutorial3.sendDeposit(provider.sender(), { value: toNano(1) });
+    await funcBlueprintTutorial3.sendWithdrawFunds(provider.sender(), {
+        amount: toNano(1),
+        value: toNano(0.05)
+    });
     let balanceAfter = await funcBlueprintTutorial3.getSMCBalance();
     let attempt = 1;
     while (balanceAfter === balanceBefore) {
@@ -19,5 +22,5 @@ export async function run(provider: NetworkProvider, args: string[]) {
         attempt++;
     }
     ui.clearActionPrompt();
-    ui.write('Deposit successfully!');
+    ui.write('WithdrawFunds successfully!');
 }
